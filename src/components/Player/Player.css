@@ -1,3 +1,20 @@
 .player {
   width: 400px;
+  max-width: 80vw;
+  background-color: #222;
+  padding: 25px 10px;
+  border-radius: 25px;
+}
+
+.MuiPaper-root{
+  background-color: transparent !important;
+  margin: 0 !important;
+}
+
+.MuiListItem-root {
+  min-width: 120px;
+}
+
+.MuiMenuItem-root {
+  min-height: 40px !important;
 }

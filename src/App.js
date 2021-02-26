@@ -29,7 +29,7 @@ function App() {
   }, [currentSongIndex, songs.length]);
 
   return (
-    <div className="App">
+    <div className="App center">
       <Player 
         currentSongIndex={currentSongIndex} 
         setCurrentSongIndex={setCurrentSongIndex} 

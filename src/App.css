@@ -4,15 +4,12 @@ body {
 }
 
 .App {
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   height: 80vh;
 }
 
 .App-logo {
-  height: 40vmin;
+  height: 30vmin;
+  min-height: 30vh;
   pointer-events: none;
 }
 
@@ -34,4 +31,11 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+
+.center {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

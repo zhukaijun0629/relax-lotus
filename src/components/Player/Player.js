@@ -5,15 +5,29 @@ import "rc-slider/assets/index.css";
 import { Howl, Howler } from "howler";
 import cloneDeep from "lodash/cloneDeep";
 import "./Player.css";
+import {
+  Button,
+  Menu,
+  MenuItem,
+  List,
+  ListItem,
+  ListItemText,
+} from "@material-ui/core";
 
 const { PUBLIC_URL } = process.env; // set automatically from package.json:homepage
 
 const Player = (props) => {
+  // styles
+  const listStyle = {
+    root: { backgroundColor: "transparent" },
+  };
+
   const style = {
     maxWidth: 500,
     margin: "auto",
     display: "flex",
     alignItems: "center",
+    width: "80%",
   };
   const style2 = {
     margin: 15,
@@ -21,12 +35,25 @@ const Player = (props) => {
     WebkitFilter:
       "invert(74%) sepia(86%) saturate(1%) hue-rotate(52deg) brightness(99%) contrast(81%)",
   };
-  const [volume, setVolume] = useState(75);
-  const [soundId, setSoundId] = useState({ birds: 0, ocean: 0 });
-  const [channelId, setChannelId] = useState(0);
+  const style3 = {
+    background: "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)",
+    borderRadius: "8px",
+    border: 0,
+    margin: "10px 0px",
+    color: "white",
+    height: 40,
+    padding: "0 5px",
+    boxShadow: "0 3px 5px 2px rgba(255, 105, 135, .3)",
+  };
 
-  const channels = useRef(props.songs.map((song) => [song.src]));
-  console.log(channels);
+  // useState
+  const [volume, setVolume] = useState(75);
+  const [soundId, setSoundId] = useState({ ocean: 0, birds: 0 });
+  const [channelId, setChannelId] = useState(0);
+  const [anchorEl, setAnchorEl] = React.useState(null);
+
+  const channels = useRef([""].concat(props.songs.map((song) => song.src)));
+  console.log(channels.current);
 
   // load song_src and sound_src
   // const [song_src] = useState(props.songs[0].src);
@@ -41,24 +68,22 @@ const Player = (props) => {
       onunlock: () => {
         if (!song.playing()) {
           song.play();
-          song.fade(0, 1, 2000);
         }
       },
-      // onplayerror: function () {
-      //   song.once("unlock", function () {
-      //     console.log(song.playing());
-      //     if (!song.playing()) {
-      //       song.play();
-      //     }
-      //   });
-      // },
     });
     if (!song.playing()) {
       song.play();
       song.fade(0, 1, 2000);
     }
     return () => {
-      song.unload();
+      if (song.playing()) {
+        song.fade(1, 0, 500);
+        song.once("fade", () => {
+          song.unload();
+        });
+      } else {
+        song.unload();
+      }
     };
   }, [channelId]);
 
@@ -71,8 +96,8 @@ const Player = (props) => {
         `${PUBLIC_URL}/music/secondary/background.mp3`,
       ],
       sprite: {
-        birds: [0, 85028.57142857142, true],
         ocean: [87000, 297804.10430839006, true],
+        birds: [0, 85028.57142857142, true],
       },
       volume: volume,
     })
@@ -105,8 +130,17 @@ const Player = (props) => {
     }
   };
 
+  const handleClickListItem = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
   const selectChannelHandler = (index) => {
     setChannelId(() => index);
+    setAnchorEl(null);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
   };
 
   // define Sound volume change handler
@@ -126,36 +160,55 @@ const Player = (props) => {
         alt="logo"
       />
       <br />
-      <br />
-      {channels.current.map((src, index) => (
-        <button
-          key={`channel${index}`}
-          onClick={() => selectChannelHandler(index)}
+
+      <div className="center">
+        <List aria-label="Channels" style={listStyle}>
+          <ListItem button onClick={handleClickListItem} style={style3}>
+            <ListItemText
+              primary={channelId === 0 ? "☰ CHANNELS" : `CHANNEL ${channelId}`}
+            />
+          </ListItem>
+        </List>
+
+        <Menu
+          anchorEl={anchorEl}
+          keepMounted
+          open={Boolean(anchorEl)}
+          onClose={handleClose}
         >
-          {`channel${index}`}
-        </button>
-      ))}
-
-      <br />
-      {Object.keys(soundId).map((type) => (
-        <button key={type} onClick={() => playSoundHandler(type)}>
-          {soundId[type] === 0 ? type : "stop"}
-        </button>
-      ))}
-
-      <div style={style}>
-        <img
-          src={`${PUBLIC_URL}/images/music.png`}
-          style={style2}
-          alt={"music"}
-        />
-        <Slider onChange={volumeChangeHandler} defaultValue={volume} />
-        <img
-          src={`${PUBLIC_URL}/images/background.png`}
-          style={style2}
-          alt={"background"}
-        />
+          {channels.current.map((src, index) => (
+            <MenuItem
+              variant="contained"
+              color="primary"
+              style={style3}
+              key={`channel${index}`}
+              onClick={() => selectChannelHandler(index)}
+              selected={index === channelId ? true : false}
+            >
+              {index === 0 ? "NONE" : `CHANNEL ${index}`}
+            </MenuItem>
+          ))}
+        </Menu>
       </div>
+
+      {Object.keys(soundId).map((type) => (
+        <Button
+          variant="contained"
+          color="primary"
+          key={type}
+          onClick={() => playSoundHandler(type)}
+        >
+          {soundId[type] === 0 ? type : "stop"}
+        </Button>
+      ))}
+      <br />
+      <br />
+
+      {Object.values(soundId).reduce((a, b) => a + b) !== 0 && (
+        <div style={style}>
+          <Slider onChange={volumeChangeHandler} defaultValue={volume} />
+        </div>
+      )}
     </div>
   );
 };
