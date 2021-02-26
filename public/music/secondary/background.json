@@ -1,0 +1,16 @@
+{
+  "urls": [
+    "background.webm",
+    "background.mp3"
+  ],
+  "sprite": {
+    "birds-chirping": [
+      0,
+      85028.57142857142
+    ],
+    "ocean-waves": [
+      87000,
+      297804.10430839006
+    ]
+  }
+}
