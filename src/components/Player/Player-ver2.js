@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useAudio } from "react-use";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
-import { Howl } from "howler";
+import { Howl, Howler } from "howler";
 import cloneDeep from "lodash/cloneDeep";
 import "./Player.css";
 import {
@@ -44,54 +45,47 @@ const Player = (props) => {
     padding: "0 5px",
     boxShadow: "0 3px 5px 2px rgba(255, 105, 135, .3)",
   };
-  const soundButtonStyle = {
-    borderRadius: "50%",
-    height: "60px",
-    width: "60px",
-    margin: "10px",
-  };
 
   // useState
   const [volume, setVolume] = useState(75);
   const [soundId, setSoundId] = useState({ ocean: 0, birds: 0 });
   const [channelId, setChannelId] = useState(0);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [anchorEl, setAnchorEl] = React.useState(null);
 
-  const channels = useRef(props.songs.map((song) => song.src));
+  const channels = useRef([""].concat(props.songs.map((song) => song.src)));
+  console.log(channels.current);
+
+  // load song_src and sound_src
+  // const [song_src] = useState(props.songs[0].src);
 
   // define Song track using HowlerJS
   useEffect(() => {
-    let song;
-    if (isPlaying) {
-      song = new Howl({
-        src: [channels.current[channelId]],
-        html5: true,
-        loop: true,
-        volume: 1,
-        onunlock: () => {
-          if (!song.playing()) {
-            song.play();
-          }
-        },
-      });
-      if (!song.playing()) {
-        song.play();
-        song.fade(0, 1, 2000);
-      }
+    const song = new Howl({
+      src: [channels.current[channelId]],
+      html5: true,
+      loop: true,
+      volume: 1,
+      onunlock: () => {
+        if (!song.playing()) {
+          song.play();
+        }
+      },
+    });
+    if (!song.playing()) {
+      song.play();
+      song.fade(0, 1, 2000);
     }
-
     return () => {
-      if (song && song.playing()) {
+      if (song.playing()) {
         song.fade(1, 0, 500);
         song.once("fade", () => {
           song.unload();
         });
-      } else if (song) {
+      } else {
         song.unload();
       }
     };
-  }, [channelId, isPlaying]);
+  }, [channelId]);
 
   // define Sound track using HowlerJS
   // using useRef since the sound track won't change
@@ -109,29 +103,9 @@ const Player = (props) => {
     })
   );
 
-  // a play/stop button for global control
-  const handlePlay = () => {
-    if (isPlaying) {
-      setIsPlaying(false);
-    } else {
-      setIsPlaying(true);
-    }
-  };
-
   // define Sound select botton handler
-  const handlePlaySound = (type) => {
-    if (type === "none") {
-      setSoundId((soundId) => {
-        const new_soundId = cloneDeep(soundId);
-        Object.keys(new_soundId).map((type) => {
-          if (new_soundId[type] !== 0) {
-            handlePlaySound(type);
-          }
-          return true;
-        });
-        return new_soundId;
-      });
-    } else if (soundId[type] !== 0) {
+  const playSoundHandler = (type) => {
+    if (soundId[type] !== 0) {
       sounds.current.fade(1, 0, 1000, soundId[type]);
       sounds.current.once(
         "fade",
@@ -160,7 +134,7 @@ const Player = (props) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleSelectChannel = (index) => {
+  const selectChannelHandler = (index) => {
     setChannelId(() => index);
     setAnchorEl(null);
   };
@@ -170,37 +144,30 @@ const Player = (props) => {
   };
 
   // define Sound volume change handler
-  const handleVolumeChange = (volume) => {
+  const volumeChangeHandler = (volume) => {
     setVolume(volume);
+    // song.volume(1 - volume / 100);
     sounds.current.volume(volume / 100);
+    console.log(sounds.current);
   };
 
   //return player
   return (
     <div className="player">
-      <div className="image-container">
-        <img
-          src={`${PUBLIC_URL}/images/logo.svg`}
-          className={`song-image ${!isPlaying ? "paused" : ""}`}
-          alt="song"
-          onClick={handlePlay}
-          // ref={songImage}
-        />
+      <img
+        src={`${PUBLIC_URL}/images/logo.svg`}
+        className="song-image"
+        alt="song"
 
-        {!isPlaying && (
-          <img
-            src={`${PUBLIC_URL}/images/Player/play-button-arrowhead.svg`}
-            className="play-button"
-            alt="playButton"
-            onClick={handlePlay}
-          />
-        )}
-      </div>
+      />
+      <br />
 
       <div className="center">
         <List aria-label="Channels" style={listStyle}>
           <ListItem button onClick={handleClickListItem} style={style3}>
-            <ListItemText primary={`CHANNEL ${channelId}`} />
+            <ListItemText
+              primary={channelId === 0 ? "☰ CHANNELS" : `CHANNEL ${channelId}`}
+            />
           </ListItem>
         </List>
 
@@ -216,37 +183,23 @@ const Player = (props) => {
               color="primary"
               style={style3}
               key={`channel${index}`}
-              onClick={() => handleSelectChannel(index)}
+              onClick={() => selectChannelHandler(index)}
               selected={index === channelId ? true : false}
             >
-              {`CHANNEL ${index}`}
+              {index === 0 ? "NONE" : `CHANNEL ${index}`}
             </MenuItem>
           ))}
         </Menu>
       </div>
 
-      {/* <button onClick={handlePlay}>{isPlaying ? "Stop" : "Play"}</button> */}
-
-      <Button
-        variant="contained"
-        color="secondary"
-        style={soundButtonStyle}
-        key={"sound-reset"}
-        className={"sound-reset-button"}
-        onClick={() => handlePlaySound("none")}
-      >
-        None
-      </Button>
       {Object.keys(soundId).map((type) => (
         <Button
           variant="contained"
           color="primary"
-          style={soundButtonStyle}
           key={type}
-          className={`sound-button ${soundId[type] === 0 ? "" : "active"}`}
-          onClick={() => handlePlaySound(type)}
+          onClick={() => playSoundHandler(type)}
         >
-          {type}
+          {soundId[type] === 0 ? type : "stop"}
         </Button>
       ))}
       <br />
@@ -254,7 +207,7 @@ const Player = (props) => {
 
       {Object.values(soundId).reduce((a, b) => a + b) !== 0 && (
         <div style={style}>
-          <Slider onChange={handleVolumeChange} defaultValue={volume} />
+          <Slider onChange={volumeChangeHandler} defaultValue={volume} />
         </div>
       )}
     </div>

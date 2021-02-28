@@ -6,7 +6,69 @@
   border-radius: 25px;
 }
 
-.MuiPaper-root{
+.image-container {
+  position: relative;
+}
+
+.play-button {
+  width: 5vmin;
+  height: 5vmin;
+  filter: invert(100%) sepia(100%) saturate(0%) hue-rotate(239deg) brightness(107%) contrast(101%);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+
+.song-image {
+  height: 30vmin;
+  min-height: 30vh;
+}
+
+.play-button:hover,
+.song-image:hover{
+  cursor:pointer; 
+  opacity:0.85;
+}
+
+.sound-reset-button {
+  background-color: rgb(167, 0, 50) !important;
+}
+
+.sound-reset-button:hover {
+  background-color: rgba(167, 0, 50, 0.8) !important;
+}
+
+.sound-button.active {
+  background-color: rgb(0, 170, 255);
+}
+
+.sound-button.active:hover {
+  background-color: rgba(0, 170, 255, 0.8);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .song-image {
+    animation: song-image-spin infinite 20s linear;
+  }
+  .song-image.paused {
+    animation-play-state: paused !important;
+  }
+}
+
+
+@keyframes song-image-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
+.MuiPaper-root {
   background-color: transparent !important;
   margin: 0 !important;
 }
